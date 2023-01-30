@@ -1,0 +1,1 @@
+SELECT dataset.dateRep AS date, sum(cases) AS "number of cases" from dataset INNER JOIN Dates ON dataset.dateRep=Dates.dateRep WHERE geoId='UK' group by dataset.dateRep order by Dates.year asc, Dates.month asc, Dates.day asc;

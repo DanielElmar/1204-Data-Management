@@ -1,0 +1,450 @@
+\documentclass{report}
+
+\title{1204 Course Work 2}
+\author{Daniel Elmar (dje1g20,  ID: 31820638)}
+
+\addtolength{\oddsidemargin}{-.5in}
+\addtolength{\evensidemargin}{-.5in}
+\addtolength{\textwidth}{1in}
+
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1in}
+
+\begin{document}
+	
+	\maketitle
+	\setlength{\parindent}{0cm}
+	\section{The Relational Model}
+	
+	\subsection{EX1}
+	dataset(\newline
+	dateRep TEXT,\newline
+	day INTEGER,\newline
+	month INTEGER,\newline
+	year INTEGER,\newline
+	cases INTEGER,\newline
+	deaths INTEGER,\newline
+	countriesAndTerritories TEXT,\newline
+	geoId TEXT,\newline
+	countryterritoryCode TEXT,\newline
+	popData2019 INTEGER,\newline
+	continentExp TEXT\newline
+	)\newline
+	\newline
+	
+	
+	
+	\subsection{EX2}	
+	dateRep $\rightarrow$ day \newline
+	dateRep $\rightarrow$ month \newline
+	dateRep $\rightarrow$ year \newline
+	day, month, year $\rightarrow$ dateRep \newline
+	geoId $\rightarrow$ countriesAndTerritories \newline
+	countriesAndTerritories $\rightarrow$ geoId \newline
+	countriesAndTerritories $\rightarrow$ countryterritoryCode \newline
+	countriesAndTerritories $\rightarrow$ continentExp \newline
+	
+	I have assumed that population, although maybe be unique in the data, cant be functionally determined in the domain, as 2 countries could have the same population, or population change over time. This also goes for populating determining other attributes. If I did not make this assumption the FD\newline
+	
+	countryterritoryCode $\rightarrow$ popData2019 \newline
+	popData2019 $\rightarrow$ countryterritoryCode \newline
+	
+	Would also be in the minimal set.\newline
+	
+	
+	I have also assumed that cases nor deaths can functionally determine, or be determined by, other attributes in the domain, as multiple entries could have the same number of deaths or cases in the future.
+	
+	\subsection{EX3}
+	(dateRep,countriesAndTerritories)\newline
+	(dateRep,geoId)\newline
+	(dateRep,countryterritoryCode,continentExp)\newline
+	(dateRep,popData2019,continentExp)\newline		
+	
+	
+	I have assumed that no more entries will be added with countryterritoryCode or popData2019 of null and a continentExp of either 'other' or 'Oceania' on the same day. This would break the candidate keys (dateRep,countryterritoryCode,continentExp) and (dateRep,popData2019,continentExp). Similar entries can be seen in rows with a geoId of 'JPG11668',
+	
+	\subsection{EX4}
+	(cases,deaths,dateRep,geoId)\newline
+	
+	In my opinion this is the most suitable super-key as uniquely identifies all rows in the data, and is unlikely to be broken as new data is added, for example multiple entities for a given country can be added on the same day, such entries are unlikely to have the same values of cases and deaths as previous entries for the same day.
+	
+	
+	\section{Normalisation}
+	
+	\subsection{EX5}
+	Using candidate key (dateRep,geoId)\newline
+	
+	day, month and year are dependent on dateRep only.	
+	countriesAndTerritories, countryterritoryCode, popData2019 and continentExp are dependent on geoId only.\newline
+	
+	Additional relations as apart of decomposition.\newline
+	
+	Countries(geoId,countriesAndTerritories,countryterritoryCode,popData2019,continentExp)\newline
+	Dates(dateRep,day,month,year)\newline
+	\subsection{EX6}
+	
+	
+	I first executed the query \newline
+	\newline
+	"CREATE TABLE Dates(\newline
+	dateRep TEXT\newline
+	constraint Dates\_pk\newline
+	primary key,\newline
+	day INTEGER,\newline
+	month INTEGER,\newline
+	year INTEGER\newline
+	);"\newline
+	\newline
+	This created my new Dates table as described. I then added the data from the dataset to this new Table using.\newline
+	\newline
+	"INSERT into Dates(dateRep, day, month, year) select distinct dateRep, day, month, year from dataset;"\newline
+	\newline
+	Then I made the Countries Table using the query\newline\newline
+	"CREATE TABLE Countries(\newline
+	geoId TEXT\newline
+	constraint Countries\_pk\newline
+	primary key,\newline
+	countriesAndTerritories TEXT,\newline
+	countryterritoryCode TEXT,\newline
+	popData2019 INTEGER,\newline
+	continentExp TEXT\newline
+	);"\newline
+	\newline
+	This created my new Countries table as described. I then added the data from the dataset to this new Table using.\newline
+	\newline
+	"INSERT into Countries(geoId, countriesAndTerritories, countryterritoryCode, popData2019,continentExp) select distinct geoId, countriesAndTerritories, countryterritoryCode, popData2019,continentExp from dataset;"\newline
+	
+	I then created a new dataset\_tmp table to remove the redundant data from dataset, aswell as set the primary keys using the query.\newline\newline
+	"CREATE TABLE dataset\_tmp(
+	dateRep TEXT,
+	cases INTEGER,
+	deaths INTEGER,
+	geoId TEXT,
+	PRIMARY KEY(dateRep,geoId)
+	)"\newline
+	
+	I then populated this new table with the relevant data form the old dataset table using the query.\newline
+	
+	"INSERT into dataset\_tmp(dateRep, cases, deaths, geoId) select distinct dateRep, cases, deaths, geoId from dataset;"\newline
+	
+	I then dropped the table dataset and renamed dataset\_tmp to dataset using the queries.\newline
+	
+	"DROP TALE dataset;"\newline
+	
+	"ALTER TABLE dataset\_tmp rename to dataset;"\newline
+	
+	This resulted in the dataBase relations of.\newline
+	
+	dataset(dateRep,cases,deaths,geoId)\newline
+	Countries(geoId,countriesAndTerritories,countryterritoryCode,popData2019,continentExp)\newline
+	Dates(dateRep,day,month,year)\newline
+	
+	
+	
+	
+	\subsection{EX7}
+	For the Countires Table. \newline
+	\newline
+	geoid $\rightarrow$ (countriesAndTerritories,countryterritoryCode,popData2019,continentExp)\newline
+	countriesAndTerritories $\rightarrow$ (geoid,countryterritoryCode,popData2019,continentExp)\newline
+	countryterritoryCode $\rightarrow$ popData2019 \&\&\newline 
+	popData2019 $\rightarrow$ countryterritoryCode\newline
+	
+	So the transitive dependencies for the Countries Table are: \newline
+	
+	countriesAndTerritories $\rightarrow$ popData2019\newline
+	countriesAndTerritories $\rightarrow$ countryterritoryCode\newline
+	geoid $\rightarrow$ countryterritoryCode\newline
+	geoid $\rightarrow$ popData2019\newline
+	
+	There are no other transitive relations in my other Tables.
+	
+	\subsection{EX8}	
+	
+	The table relations:\newline
+	\newline
+	dataset(dateRep,cases,deaths,geoId)\newline
+	Dates(dateRep,day,month,year)\newline
+	\newline
+	Are unchanged as there are no non-prime attributes that are transversely dependent on the primary key. ie all non prime attributes are only dependent on candidate keys\newline\newline
+	
+	
+	However the relation:\newline
+	
+	Countries(geoId,countriesAndTerritories,countryterritoryCode,popData2019,continentExp)\newline
+	
+	Has now been decompossed into he following 2 relations:\newline
+	
+	Countries(geoId,countriesAndTerritories,countryterritoryCode,continentExp)\newline
+	CountryPopulation(countriesAndTerritories,popData2019)\newline
+	
+	Now no non-prime attributes are transversely dependent on the primary key for all table relations.\newline
+	\newline\newline
+	
+	I used the following queries to create all the new tables
+	\newline\newline
+	CREATE TABLE CountryPopulation(
+	countriesAndTerritories TEXT PRIMARY KEY,
+	popData2019 INTEGER
+	)
+	\newline\newline
+	CREATE TABLE Counties\_tmp(
+	geoId TEXT PRIMARY KEY,
+	countriesAndTerritories TEXT,
+	countryterritoryCode TEXT,
+	continentExp TEXT
+	)
+	\newline\newline
+	I then used the following queries to population theses tables with there respective data from the table Countries.
+	\newline
+	\newline
+	INSERT into CountryPopulation(geoId, popData2019) select distinct geoId, popData2019 from Countries;
+	\newline
+	\newline
+	INSERT into Countries\_tmp(geoId,countriesAndTerritories,countryterritoryCode,continentExp) select distinct geoId,countriesAndTerritories,countryterritoryCode,continentExp from Countries;
+	\newline
+	\newline
+	I then used the following query to DROP the old Countries Table and rename the new new:
+	\newline\newline
+	DROP TABLE Countries; \newline
+	ALTER TABLE Countries\_tmp RENAME TO Countries;
+	
+	\subsection{EX9}
+	
+	My database is in Boyce-Codd Normal Form, this is because every determinate of any attribute in a table is a super key for that table. ie every functional dependency X $\rightarrow$ Y, X  is a super key of the table.
+	
+	\section{Modelling}
+	
+	\subsection{EX10}	
+	
+	\begin{enumerate}
+		\item First I opened sqlite3.exe
+		\item I then entered the comand ".open coronavirus.db"
+		\item Next I entered ".mode csv"
+		\item Then ".import dataset.csv dataset"
+		\item Then ".output dataset.sql"
+		\item Then ".dump"
+		\item Then ".exit"
+	\end{enumerate}
+	
+	\subsection{EX11}		
+	
+	This is the contents of ex11.sql\newline
+	
+	CREATE TABLE CountryPopulation(\newline
+	countriesAndTerritories TEXT PRIMARY KEY,\newline
+	popData2019 INTEGER\newline
+	);\newline
+	
+	
+	CREATE TABLE Countries(\newline
+	geoId TEXT PRIMARY KEY,\newline
+	countriesAndTerritories TEXT,\newline
+	countryterritoryCode TEXT,\newline
+	continentExp TEXT,\newline
+	FOREIGN KEY(countriesAndTerritories) REFERENCES CountryPopulation(countriesAndTerritories)\newline
+	);\newline
+	
+	
+	CREATE TABLE Dates(\newline
+	dateRep TEXT PRIMARY KEY,\newline
+	day INTEGER,\newline
+	month INTEGER,\newline
+	year INTEGER\newline
+	);\newline
+	
+	To run this on the database I executed the following steps.\newline
+	
+	\begin{enumerate}
+		\item First I opened sqlite3.exe
+		\item I then entered the comand ".open coronavirus.db"
+		\item Next I entered ".read sql11.sql"
+		\item Then ".output dataset2.sql"
+		\item Then ".dump"
+		\item Then ".exit"
+	\end{enumerate}
+	
+	I used Foreign Keys in my Countries table, I set the (countriesAndTerritories) column to be a foreign key in for the (countriesAndTerritories) column in the CountryPopulation table. This is to ensure that every entry in the Countries table has a popData2019 assigned to it in the CountryPopulation table, even if it is just a null value.\newline
+	
+	I will also use multiple foreign keys in my datasets table but this is not included in this question.
+	\newline\newline
+	I would have included an Index for the dateRep column in the dataset table but we weren't to modify it yet. I would have used the following query to do this.\newline
+	
+	CREATE UNIQUE INDEX dateRep\_index ON dataset(dateRep);
+	
+	
+	\subsection{EX12}
+	
+	This is the contents of ex12.sql\newline
+	
+	INSERT INTO CountryPopulation(\newline
+	countriesAndTerritories,\newline
+	popData2019) \newline
+	SELECT distinct \newline
+	countriesAndTerritories, \newline
+	popData2019\newline
+	FROM dataset;\newline
+	
+	INSERT INTO Countries(\newline
+	geoId,\newline
+	countriesAndTerritories,\newline
+	countryterritoryCode,\newline
+	continentExp)\newline
+	SELECT distinct \newline
+	geoId,\newline
+	countriesAndTerritories,\newline
+	countryterritoryCode,\newline
+	continentExp\newline
+	FROM dataset;\newline
+	
+	INSERT INTO Dates(\newline
+	dateRep,\newline
+	day,\newline
+	month,\newline
+	year)\newline
+	SELECT distinct \newline
+	dateRep,\newline
+	day,\newline
+	month,\newline
+	year\newline
+	FROM dataset;\newline
+	
+	To run this on the database I executed the following steps.\newline
+	
+	\begin{enumerate}
+		\item First I opened sqlite3.exe
+		\item I then entered the comand ".open coronavirus.db"
+		\item Next I entered ".read sql12.sql"
+		\item Then ".output dataset3.sql"
+		\item Then ".dump"
+		\item Then ".exit"
+	\end{enumerate}
+	
+	\subsection{EX13}
+	
+	To confirm that the previous files work correctly as intended on a fresh database I executed the following steps.\newline
+	
+	\begin{enumerate}
+		\item First I opened sqlite3.exe
+		\item I then entered the comand ".open test.db"
+		\item Next I entered ".read dataset.sql"
+		\item Then ".read ex11.sql"
+		\item Then ".read ex12.sql"
+		\item I then examined all the tables to ensure that they had been correctly created and the data populateds.
+		\item Then ".exit"
+	\end{enumerate}
+	
+	I can confirm that I am able to execute dataset.sql, ex11.sql, ex12.sql on a fresh database and successfully populate it.
+	
+	\section{Querying}
+	
+	
+	\subsection{EX14}
+	SELECT sum(cases) AS "total cases", sum(deaths) AS "total deaths" from dataset;\newline
+	
+	Here I used the sum aggregate function to add up all the cases over the entire dataset, I also used the AS operator to rename the column in the result.
+	
+	\subsection{EX15}
+	SELECT dataset.dateRep AS date, \newline
+	sum(cases) AS "number of cases" \newline
+	FROM dataset INNER JOIN Dates ON dataset.dateRep=Dates.dateRep \newline
+	WHERE geoId='UK' group by dataset.dateRep \newline
+	order by Dates.year asc, Dates.month asc, Dates.day asc;\newline
+	
+	Here I used the sum aggregate function to add up all the cases in the UK. I used a INNER JOIN to connect the dataset table to the Dates table, this gave the query access to the day,month and year columns allowing for correct ordering.\newline
+	
+	I also used the AS operator to rename the columns in the result.
+	
+	
+	
+	\subsection{EX16}
+	SELECT Countries.continentExp AS continent, \newline
+	dataset.dateRep AS date, \newline
+	sum(cases) AS "number of cases",\newline
+	sum(deaths) AS "number of deaths" \newline
+	FROM dataset \newline
+	INNER JOIN Dates ON dataset.dateRep=Dates.dateRep \newline
+	INNER JOIN Countries on dataset.geoId = Countries.geoId \newline
+	GROUP BY Countries.continentExp, dataset.dateRep \newline
+	ORDER BY Countries.continentExp, Dates.year asc, Dates.month asc, Dates.day asc;\newline
+	
+	
+	Here I used the sum aggregate function to add up all the cases and deaths for each continent. I used a INNER JOIN to connect the dataset table to the Dates table, this gave the query access to the day,month and year columns allowing for correct ordering. I also used INNER JOIN between Countries this gave the query access to continentExp which was used for grouping.\newline
+	
+	I also used the AS operator to rename the columns in the result.
+	
+	
+	
+	\subsection{EX17}
+	SELECT Countries.countriesAndTerritories AS country,\newline
+	cast(sum(cases) as real) / cast (CountryPopulation.popData2019 as real) AS "\% cases of population", \newline
+	cast(sum(deaths) as real) / cast (CountryPopulation.popData2019 as real) AS "\% deaths of population"\newline
+	FROM dataset \newline
+	INNER JOIN Countries on dataset.geoId = Countries.geoId \newline
+	INNER JOIN CountryPopulation on CountryPopulation.countriesAndTerritories = Countries.countries AndTerritories \newline
+	GROUP BY Countries.countriesAndTerritories;\newline
+	
+	
+	Here I used the sum aggregate function to add up all the cases and deaths for each Country. I used a INNER JOIN to connect the dataset table to the Countries table. This gave the query access to countriesAndTerritories which was used for grouping and to retrieve the population for each Country, this was also achieved by a 2nd INNER JOIN on CountryPopulation to give the query access to the popData2019 column.\newline
+	
+	I also used cast( ... as real ) to ensure the mathematical operator '/' wouldn't fail\newline
+	
+	I also used the AS operator to rename the columns in the result.
+	
+	
+	
+	
+	\subsection{EX18}
+	SELECT Countries.countriesAndTerritories AS "country name", \newline
+	cast(sum(deaths) as real) / cast(sum(cases) as real) AS "\% deaths of country cases" \newline
+	FROM dataset \newline
+	INNER JOIN Countries on dataset.geoId = Countries.geoId \newline
+	GROUP BY Countries.countriesAndTerritories  \newline
+	ORDER BY "\% deaths of country cases" desc \newline
+	LIMIT 10; \newline
+	
+	Here I used the sum aggregate function to add up all the deaths and cases for each Country. I used a INNER JOIN to connect the dataset table to the Countries table. This gave the query access to countriesAndTerritories which was used for grouping and the 'country name' column in the result. \newline
+	
+	I also used cast( ... as real ) to ensure the mathematical operator '/' wouldn't fail\newline
+	
+	I also used LIMIT to control the number of rows that were present in the result, this was set to 10\newline
+	
+	I also used the AS operator to rename the columns in the result.
+	
+	
+	\subsection{EX19}
+	SELECT dataset.dateRep AS "date", \newline
+	
+	SUM(deaths) OVER (\newline
+	ORDER BY Dates.year, Dates.month, Dates.day\newline
+	ROWS BETWEEN\newline
+	UNBOUNDED PRECEDING\newline
+	AND CURRENT ROW\newline
+	) AS "cumulative UK deaths",\newline
+	\newline
+	SUM(cases) OVER (\newline
+	ORDER BY Dates.year, Dates.month, Dates.day\newline
+	ROWS BETWEEN\newline
+	UNBOUNDED PRECEDING\newline
+	AND CURRENT ROW\newline
+	) AS "cumulative UK cases"\newline
+	
+	FROM dataset \newline
+	INNER JOIN Dates on dataset.dateRep = Dates.dateRep\newline
+	Where dataset.geoId="UK"\newline
+	GROUP BY dataset.dateRep \newline
+	ORDER BY Dates.year, Dates.month, Dates.day; \newline
+	
+	Here I used the sum aggregate function to add up all the deaths and cases for each date. I used a INNER JOIN to connect the dataset table to the Dates table, this gave the query access to the day,month and year columns allowing for correct ordering. \newline
+	
+	I also used cast( ... as real ) to ensure the mathematical operator '/' wouldn't fail\newline
+	
+	I also used LIMIT to control the number of rows that were present in the result, this was set to 10\newline
+	
+	I also used Window Functions to sum over only specific rows in the table for each row in the result. I implemented the function to sum over all PRECEDING rows to, and including the current one, effectively implementing a cumulatively growing column in the result. \newline
+	
+	I also used the AS operator to rename the columns in the result.
+	
+	
+	
+\end{document}
