@@ -1,0 +1,9 @@
+
+Create a csv fot Bubble sort with 
+Cloumn 1 being the size of the array and
+Column 2 being the time taken to complete
+
+Use the given plot to reprsent the Data
+
+
+data.dat
